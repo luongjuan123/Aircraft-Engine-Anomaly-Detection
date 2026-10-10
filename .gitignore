@@ -1,0 +1,29 @@
+# Raw Datasets
+data/
+**/data/
+
+# Processed Data (large CSV files)
+Processed data/
+**/Processed data/
+*.csv
+
+# Python Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
