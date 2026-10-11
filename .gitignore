@@ -1,11 +1,20 @@
-# Raw Datasets
-data/
-**/data/
+# Raw Datasets & Large Data Directories
+[dD]ata/
+**/[dD]ata/
+[pP]rocessed [dD]ata/
+**/[pP]rocessed [dD]ata/
 
-# Processed Data (large CSV files)
-Processed data/
-**/Processed data/
+# Large Data & Binary Files
 *.csv
+*.h5
+*.hdf5
+*.mat
+*.tar
+*.tar.gz
+*.zip
+*.7z
+*.rar
+*.gz
 
 # Python Virtual Environment
 .venv/
