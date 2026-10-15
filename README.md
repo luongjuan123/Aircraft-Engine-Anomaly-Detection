@@ -92,10 +92,12 @@ The dev and test sets are transformed using these exact parameters, preserving s
 Aircraft-Engine-Anomaly-Detection/
 ├── .gitignore
 ├── README.md
+├── plot_pca_features.py                # Unified PCA feature diagnostics & cross-dataset benchmark runner
 ├── Work on 6.+Turbofan+Engine+Degradation+Simulation+Data+Set/
 │   ├── gmm.py                          # Pure NumPy Gaussian Mixture Model with EM
 │   ├── preprocess.py                   # Zero-leakage standardizer & feature scaler
 │   ├── train_anomaly_detection.py      # Training, threshold calibration, evaluation & plotting
+│   ├── pca_analysis.py                 # PCA feature dimensionality reduction & biplot diagnostics
 │   ├── milestone.ipynb                 # Interactive end-to-end analysis and evaluation notebook
 │   ├── Data/                           # Raw split CSVs and preprocessed .npy arrays (excluded from git)
 │   │   ├── train.csv, dev.csv, test.csv
@@ -106,11 +108,14 @@ Aircraft-Engine-Anomaly-Detection/
 │   └── Output/                         # Production model artifact and visual diagnostics
 │       ├── gmm_model.pkl               # Serialized trained GMM and scaling parameters
 │       ├── gmm_training_and_evaluation.png
-│       └── engine_degradation_trajectories.png
+│       ├── engine_degradation_trajectories.png
+│       ├── pca_feature_analysis.png    # 6-panel PCA scree, biplot, regimes & degradation plot
+│       └── cross_dataset_pca_comparison.png
 └── Work on 17.+Turbofan+Engine+Degradation+Simulation+Data+Set+2/
     ├── gmm.py                          # Pure NumPy Gaussian Mixture Model with EM
     ├── preprocess.py                   # Zero-leakage standardizer & HDF5 telemetry preprocessor
     ├── train_anomaly_detection.py      # Training, threshold calibration, test evaluation & plotting
+    ├── pca_analysis.py                 # PCA feature dimensionality reduction & biplot diagnostics
     ├── milestones.ipynb                # Interactive end-to-end analysis and evaluation notebook
     ├── Data/                           # HDF5 datasets and preprocessed .npy feature arrays (excluded from git)
     │   ├── N-CMAPSS_DS02-006.h5 (and other N-CMAPSS sub-datasets)
@@ -121,7 +126,9 @@ Aircraft-Engine-Anomaly-Detection/
     └── Output/                         # Production model artifact and visual diagnostics
         ├── gmm_model.pkl               # Serialized trained GMM and scaling parameters
         ├── gmm_training_and_evaluation.png
-        └── engine_degradation_trajectories.png
+        ├── engine_degradation_trajectories.png
+        ├── pca_feature_analysis.png    # 6-panel PCA scree, biplot, regimes & degradation plot
+        └── cross_dataset_pca_comparison.png
 ```
 
 > **Note on Data Management**:
@@ -270,6 +277,17 @@ Condition monitoring across operational lifespans for individual engines (Units 
 - **Instantaneous vs Rolling Health Index**: 5-cycle rolling smoothing filters sensor noise to yield a stable condition indicator.
 - **Advance Warning Lead Time**: A sustained anomaly alert is triggered **80 to 90 flight cycles in advance** of complete engine failure, providing ample operational lead time.
 
+### Principal Component Analysis (PCA) Feature Diagnostics
+![C-MAPSS PCA Feature Diagnostics](Work%20on%206.+Turbofan+Engine+Degradation+Simulation+Data+Set/Output/pca_feature_analysis.png)
+
+The C-MAPSS PCA diagnostic dashboard presents a 6-panel decomposition of the 24 operational and sensor channels:
+1. **Scree Plot & Cumulative Variance**: PC1 captures **82.26%** and PC2 captures **16.00%**, retaining **98.26% of total operational variance** in a 2D planar subspace (99.51% across top 3 PCs).
+2. **PCA Biplot**: Sensor loading vectors show thermodynamic gas-path temperatures and pressures (`s_4`, `s_9`, `s_11`, `s_17`) aligning with PC1, while spool speed corrections (`s_13`, `s_19`) and flight settings (`setting_1`, `setting_3`) align with PC2.
+3. **Latent Health Separation**: Clear envelope expansion and dispersion between nominal cruise cycles ($RUL > 125$) and degrading cycles ($RUL \le 125$).
+4. **Multi-Regime Clustering**: The 6 operational flight regimes naturally segregate into 6 distinct clusters across the latent plane.
+5. **Feature Loadings Distribution**: Quantitative eigenvector weights across all 24 channels.
+6. **Engine Lifecycle Trajectory**: Tracking Engine #1 from FD001 across its complete lifespan (Cycle 1 to EOL failure) drifting outward along the degradation manifold.
+
 ---
 
 ## Visual Diagnostics: Folder 17 (NASA N-CMAPSS)
@@ -292,6 +310,27 @@ Condition monitoring across complete operational lifespans for all held-out test
 - **Test Unit #11** (Lifespan: 59 cycles | Fault Onset $t_s = 19$): Sustained alarm triggered at **Cycle 19**, providing **40 flight cycles of advance warning** before breakdown.
 - **Test Unit #14** (Lifespan: 76 cycles | Fault Onset $t_s = 36$): Sustained alarm triggered at **Cycle 36**, providing **40 flight cycles of advance warning** before breakdown.
 - **Test Unit #15** (Lifespan: 67 cycles | Fault Onset $t_s = 24$): Sustained alarm triggered at **Cycle 24**, providing **43 flight cycles of advance warning** before breakdown.
+
+### Principal Component Analysis (PCA) Feature Diagnostics
+![N-CMAPSS PCA Feature Diagnostics](Work%20on%2017.+Turbofan+Engine+Degradation+Simulation+Data+Set+2/Output/pca_feature_analysis.png)
+
+The N-CMAPSS PCA diagnostic dashboard presents a 6-panel decomposition of the 18 joint operational and sensor channels:
+1. **Scree Plot & Cumulative Variance**: PC1 captures **68.35%** and PC2 captures **30.04%**, retaining **98.39% of total variance** from continuous transient flight missions (99.62% across top 3 PCs).
+2. **PCA Biplot**: Contrasts flight scenario descriptors ($W$: `alt`, `Mach`, `TRA`, `T2`) with internal physical sensor measurements ($X_s$). Spool speeds (`Nf`, `Nc`) and `TRA` dominate PC2, while gas path pressures (`P40`, `Ps30`, `P24`) and fuel flow (`Wf`) dominate PC1.
+3. **Latent Health Separation**: Ground-truth nominal flight telemetry ($h_s = 1.0$) vs abnormal degradation regime ($h_s = 0.0$).
+4. **Commercial Flight Class Manifolds**: Separation across Flight Classes 1, 2, and 3 (short, medium, and long-haul profiles).
+5. **Feature Loadings Distribution**: Quantitative eigenvector weights across all 18 channels.
+6. **Test Fleet Degradation Trajectories**: Multi-cycle trajectories for Units #11, #14, and #15 drifting away from nominal flight manifold past fault onset $t_s$.
+
+---
+
+## Cross-Dataset PCA Comparative Benchmark
+
+![Cross-Dataset PCA Comparison](Work%20on%2017.+Turbofan+Engine+Degradation+Simulation+Data+Set+2/Output/cross_dataset_pca_comparison.png)
+
+Direct visual benchmark comparing dimensionality reduction efficacy, scree decay, and latent anomaly separation between discrete steady-state cruise telemetry (C-MAPSS) and continuous transient flight telemetry (N-CMAPSS):
+- **Dimensionality Reduction Efficacy**: In both benchmark generations, the top 2 principal components capture over **98.2% to 98.4% of total variance**, showing that complex high-dimensional turbofan dynamics can be projected into 2D planar space without substantial information loss.
+- **Manifold Separation**: Both datasets exhibit prominent divergence between nominal envelopes and degradation states in latent space, providing geometric grounding for the high sensitivity of Gaussian Mixture density estimation.
 
 ---
 
