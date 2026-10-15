@@ -36,3 +36,13 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Environment and Temporary Files
+.env
+.env.*
+*.mjs
+*.ts
+package.json
+postcss.config.js
+tailwind.config.ts
+tsconfig.json
